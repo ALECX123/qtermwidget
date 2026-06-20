@@ -1,4 +1,4 @@
-/*
+﻿/*
     Copyright 2007-2008 by Robert Knight <robertknight@gmail.com>
     Copyright 1997,1998 by Lars Doelle <lars.doelle@on-line.de>
 
@@ -20,13 +20,16 @@
 
 #ifndef TERMINALDISPLAY_H
 #define TERMINALDISPLAY_H
-
+// 必须放在所有头文件最顶部
+#define NOMINMAX
+#include <windows.h>
 // Qt
 #include <QColor>
 #include <QPointer>
 #include <QScrollBar>
 #include <QString>
-
+#include <memory>   // 新增，shared_ptr/make_shared 依赖
+#include <utility>
 // Konsole
 #include "Filter.h"
 #include "Character.h"
@@ -597,7 +600,7 @@ protected:
     virtual void fontChange(const QFont &font);
     void focusInEvent(QFocusEvent* event) override;
     void focusOutEvent(QFocusEvent* event) override;
-    void enterEvent(QEnterEvent* event) override;
+    void enterEvent(QEvent* event) override;
     void leaveEvent(QEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
     void mouseDoubleClickEvent(QMouseEvent* ev) override;
@@ -914,7 +917,7 @@ Q_OBJECT
 public:
     ScrollBar(QWidget* parent = nullptr);
 protected:
-    void enterEvent(QEnterEvent* event) override;
+    void enterEvent(QEvent* event) override;
 };
 
 }

@@ -28,7 +28,8 @@
 #include <QSet>
 #include <QTextStream>
 #include <QVarLengthArray>
-
+#include <memory>
+#include <algorithm>
 // Konsole
 #include "Character.h"
 #include "History.h"

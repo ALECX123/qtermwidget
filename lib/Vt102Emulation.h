@@ -198,7 +198,7 @@ private:
 
   bool _reportFocusEvents;
 
-  QStringEncoder _toUtf8;
+  QString _toUtf8;
 };
 
 }

@@ -26,7 +26,7 @@
 
 // Standard
 #include <cstdio>
-#include <unistd.h>
+//#include <unistd.h>
 
 // Qt
 #include <QEvent>
@@ -45,7 +45,7 @@ Vt102Emulation::Vt102Emulation()
      prevCC(0),
      _titleUpdateTimer(new QTimer(this)),
      _reportFocusEvents(false),
-     _toUtf8(QStringEncoder::Utf8)
+     _toUtf8("Utf8")
 {
   _titleUpdateTimer->setSingleShot(true);
   QObject::connect(_titleUpdateTimer, &QTimer::timeout,
@@ -1194,7 +1194,7 @@ void Vt102Emulation::sendKeyEvent(QKeyEvent* event, bool fromPaste)
         else if ( !entry.text().isEmpty() )
         {
 	    QString str = QString::fromUtf8(entry.text(true,modifiers));
-	    QByteArray bytes = _toUtf8(str);
+	    QByteArray bytes = str.toUtf8();
 	    textToSend += bytes;
         }
         else if((modifiers & KeyboardTranslator::CTRL_MOD) && event->key() >= 0x40 && event->key() < 0x5f) {
@@ -1210,7 +1210,7 @@ void Vt102Emulation::sendKeyEvent(QKeyEvent* event, bool fromPaste)
             textToSend += "\033[6~";
         }
         else {
-	    QByteArray bytes = _toUtf8(event->text());
+	    QByteArray bytes = event->text().toUtf8();
 	    textToSend += bytes;
         }
 

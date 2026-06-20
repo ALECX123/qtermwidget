@@ -1,4 +1,4 @@
-/*
+﻿/*
     This source file is part of Konsole, a terminal emulator.
 
     Copyright 2007-2008 by Robert Knight <robertknight@gmail.com>
@@ -43,7 +43,7 @@
 //#include <KStandardDirs>
 
 using namespace Konsole;
-using namespace Qt::Literals::StringLiterals;
+//using namespace Qt::Literals::StringLiterals;
 
 const ColorEntry ColorScheme::defaultTable[TABLE_COLORS] =
  // The following are almost IBM standard color codes, with some slight
@@ -334,20 +334,19 @@ void ColorScheme::readColorEntry(QSettings * s , int index)
 
     ColorEntry entry;
 
-    QVariant colorValue = s->value(QLatin1String("Color"));
-    QStringView colorStr;
+      QVariant colorValue = s->value(QLatin1String("Color"));
+    QString colorStr;
     int r = 0; int g = 0; int b = 0;
     bool ok = false;
-    // XXX: Undocumented(?) QSettings behavior: values with commas are parsed
-    // as QStringList and others QString
-    if (colorValue.typeId() == QMetaType::QStringList)
+
+    // Qt5.12 用 type() 代替 typeId()
+    if (colorValue.type() == QVariant::StringList)
     {
         QStringList rgbList = colorValue.toStringList();
         colorStr = rgbList.join(QLatin1Char(','));
         if (rgbList.count() == 3)
         {
             bool parse_ok;
-
             ok = true;
             r = rgbList[0].toInt(&parse_ok);
             ok = ok && parse_ok && (r >= 0 && r <= 0xff);
@@ -360,14 +359,19 @@ void ColorScheme::readColorEntry(QSettings * s , int index)
     else
     {
         colorStr = colorValue.toString();
-        static const QRegularExpression hexColorPattern{"^#[0-9a-f]{6}$"_L1,
-                                           QRegularExpression::CaseInsensitiveOption};
-        if (hexColorPattern.matchView(colorStr).hasMatch())
+        // Qt5.12 不支持 _L1 字面量、列表初始化构造正则
+        static const QRegularExpression hexColorPattern(
+            "^#[0-9a-f]{6}$",
+            QRegularExpression::CaseInsensitiveOption
+        );
+        // 5.12 只有 match()，无 matchView
+        QRegularExpressionMatch match = hexColorPattern.match(colorStr);
+        if (match.hasMatch())
         {
-            // If we got a match, colorStr size is 7
-            r = colorStr.sliced(1, 2).toInt(nullptr, 16);
-            g = colorStr.sliced(3, 2).toInt(nullptr, 16);
-            b = colorStr.sliced(5, 2).toInt(nullptr, 16);
+            // 5.12 QStringView 无 sliced，改用 QString::mid
+            r = colorStr.mid(1, 2).toInt(nullptr, 16);
+            g = colorStr.mid(3, 2).toInt(nullptr, 16);
+            b = colorStr.mid(5, 2).toInt(nullptr, 16);
             ok = true;
         }
     }

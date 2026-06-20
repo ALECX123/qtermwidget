@@ -25,7 +25,7 @@
 // System
 #include <cstdio>
 #include <cstdlib>
-#include <unistd.h>
+//#include <unistd.h>
 #include <string>
 
 // Qt
@@ -36,7 +36,7 @@
 #include <QRegularExpression>
 #include <QTextStream>
 #include <QThread>
-
+#include <QDebug>
 #include <QTime>
 
 // Konsole
@@ -54,7 +54,7 @@ Emulation::Emulation() :
   _keyTranslator(nullptr),
   _usesMouse(false),
   _bracketedPasteMode(false),
-  _toUtf16(QStringConverter::Utf8)
+  _toUtf16("Utf8")
 {
   // create screens with a default size
   _screen[0] = new Screen(40,80);
@@ -229,7 +229,7 @@ void Emulation::receiveData(const char* text, int length)
      * https://unicodebook.readthedocs.io/unicode_encodings.html#surrogates
      */
     QByteArray ba(text, length);
-    QString str = _toUtf16(ba);
+    QString str = QString::fromUtf8(ba);
     std::wstring unicodeText = str.toStdWString();
 
     //send characters to terminal emulator

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is a part of QTerminal - http://gitorious.org/qterminal
  *
  * This file was un-linked from KDE and modified
@@ -31,6 +31,8 @@
 #ifndef PTY_H
 #define PTY_H
 
+#include "kptydevice.h" // 最顶部引入完整定义
+#include "kptyprocess.h"
 // Qt
 #include <QStringList>
 #include <QVector>
@@ -106,7 +108,6 @@ Q_OBJECT
                ulong winid,
                bool addToUtmp
              );
-
     /**
      * set properties for "EmptyPTY"
      */
@@ -200,7 +201,7 @@ Q_OBJECT
 
   private slots:
     // called when data is received from the terminal process
-    void dataReceived();
+    void dataReceived(QString text);
 
   private:
       void init();

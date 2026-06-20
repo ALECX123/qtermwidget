@@ -59,8 +59,7 @@ const Qt::KeyboardModifier KeyboardTranslator::CTRL_MOD = Qt::ControlModifier;
 #endif
 
 KeyboardTranslatorManager::KeyboardTranslatorManager()
-    : _translatorBaseDir(std::nullopt),
-      _haveLoadedAll(false)
+    : _haveLoadedAll(false)
 {
 }
 KeyboardTranslatorManager::~KeyboardTranslatorManager()
@@ -69,8 +68,8 @@ KeyboardTranslatorManager::~KeyboardTranslatorManager()
 }
 QString KeyboardTranslatorManager::findTranslatorPath(const QString& name)
 {
-    if (_translatorBaseDir.has_value() && _translatorBaseDir.value().exists()) {
-        return _translatorBaseDir.value().filePath(name + QLatin1String(".keytab"));
+    if (_hasTranslatorDir && _translatorBaseDir.exists()) {
+        return _translatorBaseDir.filePath(name + QLatin1String(".keytab"));
     }
     return QString(get_kb_layout_dir() + name + QLatin1String(".keytab"));
     //return KGlobal::dirs()->findResource("data","konsole/"+name+".keytab");
@@ -211,8 +210,8 @@ void KeyboardTranslatorManager::setTranslatorBaseDir(const QString& path)
     else
     {
         qWarning() << "Cannot find" << d.dirName() << ", clearing KeyboardTranslator base dir.";
-        if (_translatorBaseDir.has_value()) {
-            _translatorBaseDir = std::nullopt;
+        if (_hasTranslatorDir) {
+            _hasTranslatorDir = false;
         } else {
             return; // no need to clear values if we were already using the default dir
         }
@@ -223,7 +222,7 @@ void KeyboardTranslatorManager::setTranslatorBaseDir(const QString& path)
 
 void KeyboardTranslatorManager::clearTranslatorBaseDir()
 {
-    _translatorBaseDir = std::nullopt;
+    _hasTranslatorDir = false;
     _haveLoadedAll = false;
     _translators.clear();
 }
@@ -485,7 +484,7 @@ bool KeyboardTranslatorReader::parseAsKeyCode(const QString& item , int& keyCode
     QKeySequence sequence = QKeySequence::fromString(item);
     if ( !sequence.isEmpty() )
     {
-        keyCode = sequence[0].toCombined();
+        keyCode = sequence[0];
 
         if ( sequence.count() > 1 )
         {
@@ -713,7 +712,7 @@ QByteArray KeyboardTranslator::Entry::escapedText(bool expandWildCards,Qt::Keybo
         {
             QByteArray escaped("\\x");
             escaped += QByteArray(1,ch).toHex();
-            result.replace(i, 1, QByteArrayView(escaped));
+            result.replace(i, 1, escaped);
         } else if ( replacement != 0 )
         {
             result.remove(i,1);

@@ -1,4 +1,4 @@
-/*
+﻿/*
     This file is part of Konsole, a terminal emulator for KDE.
 
     Copyright 2006-2008 by Robert Knight <robertknight@gmail.com>
@@ -67,7 +67,7 @@
 #include "TerminalCharacterDecoder.h"
 
 using namespace Konsole;
-using namespace Qt::Literals::StringLiterals;
+//using namespace Qt::Literals::StringLiterals;
 
 #define yMouseScroll 1
 
@@ -107,12 +107,12 @@ const QChar LTR_OVERRIDE_CHAR( 0x202D );
 
 inline int TerminalDisplay::loc(int x, int y) const
 {
-    // if (y < 0 || y >= _lines) {
-    //     qWarning() << "loc(): Y:" << y << ", Lines:" << _lines;
-    // }
-    // if (x < 0 || x >= _columns) {
-    //     qWarning() << "loc(): X:" << x << ", Columns:" << _columns;
-    // }
+    if (y < 0 || y >= _lines) {
+        qWarning() << "loc(): Y:" << y << ", Lines:" << _lines;
+    }
+    if (x < 0 || x >= _columns) {
+        qWarning() << "loc(): X:" << x << ", Columns:" << _columns;
+    }
 
     // Q_ASSERT(y >= 0 && y < _lines);
     // Q_ASSERT(x >= 0 && x < _columns);
@@ -145,6 +145,7 @@ inline int TerminalDisplay::loc(int x, int y) const
 // the user doesn't really touch the mouse - once the mouse moves we'll quickly be out of the deadzone
 static QPoint gs_deadSpot(-1,-1);
 static QPoint gs_futureDeadSpot;
+
 std::shared_ptr<QTimer> TerminalDisplay::_hideMouseTimer;
 
 ScreenWindow* TerminalDisplay::screenWindow() const
@@ -1414,16 +1415,20 @@ void TerminalDisplay::focusInEvent(QFocusEvent*)
     emit termGetFocus();
 }
 
-void TerminalDisplay::enterEvent(QEnterEvent* event)
+void TerminalDisplay::enterEvent(QEvent* event)
 {
-  if (gs_deadSpot.x() < 0 && _hideMouseTimer
-      // NOTE: scrollBar->underMouse() doesn't work here
-      && !_scrollBar->rect().contains(_scrollBar->mapFromParent(event->position().toPoint())))
-  {
-    gs_futureDeadSpot = event->position().toPoint();
-    _hideMouseTimer->start(_mouseAutohideDelay);
-  }
-  QWidget::enterEvent(event);
+    Q_UNUSED(event);
+    if (gs_deadSpot.x() < 0 && _hideMouseTimer)
+    {
+        // 取当前窗口下本地鼠标坐标，不使用QCursor全局屏幕坐标
+        QPoint localMouse = mapFromGlobal(QCursor::pos());
+        if (!_scrollBar->rect().contains(_scrollBar->mapFromParent(localMouse)))
+        {
+            gs_futureDeadSpot = localMouse;
+            _hideMouseTimer->start(_mouseAutohideDelay);
+        }
+    }
+    QWidget::enterEvent(event);
 }
 
 void TerminalDisplay::leaveEvent(QEvent* event)
@@ -2108,7 +2113,7 @@ void TerminalDisplay::mousePressEvent(QMouseEvent* ev)
   {
     // Shift+click extends the selection, but only for programs not interested in mouse.
     if (_mouseMarks && (ev->modifiers() & Qt::ShiftModifier)) {
-      extendSelection(ev->position().toPoint());
+      extendSelection(ev->pos());
       return;
     }
 
@@ -2227,7 +2232,7 @@ void TerminalDisplay::mouseMoveEvent(QMouseEvent* ev)
         gs_deadSpot = QPoint(-1,-1);
         QApplication::restoreOverrideCursor();
       }
-      gs_futureDeadSpot = ev->position().toPoint();
+      gs_futureDeadSpot = ev->pos();
       Q_ASSERT(_hideMouseTimer);
       _hideMouseTimer->start(_mouseAutohideDelay);
   }
@@ -2239,7 +2244,7 @@ void TerminalDisplay::mouseMoveEvent(QMouseEvent* ev)
                        && !_scrollBar->style()->styleHint(QStyle::SH_ScrollBar_Transient, nullptr, _scrollBar))
                       ? _scrollBar->width() : 0);
 
-  getCharacterPosition(ev->position().toPoint(),charLine,charColumn);
+  getCharacterPosition(ev->pos(),charLine,charColumn);
 
   // handle filters
   // change link hot-spot appearance on mouse-over
@@ -2316,8 +2321,8 @@ void TerminalDisplay::mouseMoveEvent(QMouseEvent* ev)
 
 //   int distance = KGlobalSettings::dndEventDelay();
    int distance = QApplication::startDragDistance();
-   if ( ev->position().x() > dragInfo.start.x() + distance || ev->position().x() < dragInfo.start.x() - distance ||
-        ev->position().y() > dragInfo.start.y() + distance || ev->position().y() < dragInfo.start.y() - distance)
+   if ( ev->pos().x() > dragInfo.start.x() + distance || ev->pos().x() < dragInfo.start.x() - distance ||
+        ev->pos().y() > dragInfo.start.y() + distance || ev->pos().y() < dragInfo.start.y() - distance)
    {
       // we've left the drag square, we can start a real drag operation now
       emit isBusySelecting(false); // Ok.. we can breath again.
@@ -2339,7 +2344,7 @@ void TerminalDisplay::mouseMoveEvent(QMouseEvent* ev)
  // don't extend selection while pasting
   if (ev->buttons() & Qt::MiddleButton) return;
 
-  extendSelection(ev->position().toPoint());
+  extendSelection(ev->pos());
 }
 
 void TerminalDisplay::extendSelection( const QPoint& position )
@@ -2919,7 +2924,7 @@ void TerminalDisplay::wheelEvent( QWheelEvent* ev )
 
     int charLine;
     int charColumn;
-    getCharacterPosition( ev->position() , charLine , charColumn );
+    getCharacterPosition( ev->pos() , charLine , charColumn );
 
     emit mouseSignal( ev->angleDelta().y() > 0 ? 4 : 5,
                       charColumn + 1,
@@ -3060,7 +3065,7 @@ void TerminalDisplay::emitSelection(bool useXselection,bool appendReturn)
     text.replace(QLatin1Char('\n'), QLatin1Char('\r'));
 
     if (_trimPastedTrailingNewlines) {
-        static const QRegularExpression regexp{u"\\r+$"_s};
+        static const QRegularExpression regexp(QLatin1String("\\r+$"));
         text.replace(regexp, QString());
     }
 
@@ -3553,7 +3558,7 @@ void TerminalDisplay::dropEvent(QDropEvent* event)
     dropText.replace(QLatin1Char('\n'), QLatin1Char('\r'));
     if (_trimPastedTrailingNewlines)
     {
-      static const QRegularExpression regexp{u"\\r+$"_s};
+      static const QRegularExpression regexp(QLatin1String("\\r+$"));
       dropText.replace(regexp, QString());
     }
     if (_confirmMultilinePaste && dropText.contains(QLatin1Char('\r')))
@@ -3702,7 +3707,7 @@ bool AutoScrollHandler::eventFilter(QObject* watched,QEvent* event)
 
 ScrollBar::ScrollBar(QWidget* parent) : QScrollBar(parent) {}
 
-void ScrollBar::enterEvent(QEnterEvent* event)
+void ScrollBar::enterEvent(QEvent* event)
 {
   // show the mouse cursor that was auto-hidden
   if (gs_deadSpot.x() > -1)

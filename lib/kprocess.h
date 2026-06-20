@@ -31,7 +31,7 @@
 #define KPROCESS_H
 
 //#include <kdecore_export.h>
-
+#include "kptydevice.h"
 #include <QProcess>
 
 #include <memory>

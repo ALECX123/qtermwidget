@@ -1,349 +1,165 @@
-# QTermWidget
+[中文文档 | Chinese Version](./README_CN.md)
+# QTermWidget5 \(Windows ConPTY Adaptation Edition\)
 
-## Overview
+## Project Overview
 
-A terminal emulator widget for Qt 6.
+Forked from the original QTermWidget 2\.4\.0, this version is **natively Windows\-only**, powered by Windows ConPTY for terminal emulation\.
+It is built with **Qt5 \+ CMake**, with a minimum supported Qt version of 5\.12\.11\.
 
-QTermWidget is an open-source project originally based on the KDE4 Konsole application, but it took its own direction later on.
-The main goal of this project is to provide a Unicode-enabled, embeddable Qt widget for using as a built-in console (or terminal emulation widget).
+### Core Features
 
-It is compatible with BSD, Linux and OS X.
+1. **Windows Exclusive Terminal Backend**
 
-This project is licensed under the terms of the [GPLv2](https://www.gnu.org/licenses/gpl-2.0.en.html) or any later version. See the LICENSE file for the full text of the license. Some files are published under compatible licenses:
+    - Implements real cmd/PowerShell terminals via the native `CreatePseudoConsole` ConPTY API\.
+
+2. **Full\-Featured Terminal Emulation**
+
+    - 256\-color \& true\-color rendering with customizable color schemes\.
+
+    - Complete VT escape sequence parsing, with native support for cursors, text selection and auto line wrapping\.
+
+    - Native Chinese \& Unicode rendering; optional utf8proc library for advanced character width calculation\.
+
+3. **Built\-in UI Widgets**
+
+    - Integrated search bar, copy/paste functions, font scaling, and full set of keyboard shortcuts\.
+
+    - Fully customizable keyboard mapping layouts\.
+
+4. **Standard CMake Build System**
+
+    - Complete CMake build scripts requiring CMake 3\.18 or higher\.
+
+    - Produces standard shared libraries with exported CMake config files for downstream integration\.
+
+    - Includes a standalone test terminal binary `test_terminal`\.
+
+5. **Minimal High\-Level API**
+A single `QTermWidget` control for drop\-in integration\. Launch terminal processes with one line of code and capture raw terminal output via Qt signals\.
+
+## Dependencies
+
+### Mandatory Global Dependencies
+
+- CMake ≥ 3\.18\.0
+
+- Qt5 Widgets ≥ 5\.12\.11
+
+- Qt5 LinguistTools \(for translation files\)
+
+### Windows System Requirements
+
+Relies on system\-native ConPTY APIs\. Compatible with **Windows 10 1903 and all Windows 11 releases**; no extra low\-level system libraries required\.
+
+### Optional Third\-Party Dependency
+
+- `utf8proc`: Optimizes width calculation for complex Unicode characters\.
+
+## Build \& Compilation Guide
+
+### 1\. Clone Source Code
+
+```bash
+git clone https://github.com/xxx/qtermwidget.git
+cd qtermwidget
 ```
-Files: example/main.cpp
-       lib/TerminalCharacterDecoder.cpp
-       lib/TerminalCharacterDecoder.h
-       lib/kprocess.cpp
-       lib/kprocess.h
-       lib/kpty.cpp
-       lib/kpty.h
-       lib/kpty_p.h
-       lib/kptydevice.cpp
-       lib/kptydevice.h
-       lib/kptyprocess.cpp
-       lib/kptyprocess.h
-       lib/qtermwidget.cpp
-       lib/qtermwidget.h
-       lib/qtermwidget_interface.h
-Copyright: Author Adriaan de Groot <groot@kde.org>
-           2010, KDE e.V <kde-ev-board@kde.org>
-           2002-2007, Oswald Buddenhagen <ossi@kde.org>
-           2006-2008, Robert Knight <robertknight@gmail.com>
-           2002, Waldo Bastian <bastian@kde.org>
-           2008, e_k <e_k@users.sourceforge.net>
-           2022, Francesc Martinez <info@francescmm.com>
-License: LGPL-2+
 
-Files: cmake/FindUtf8Proc.cmake
-Copyright: 2009-2011, Kitware, Inc
-           2009-2011, Philip Lowman <philip@yhbt.com>
-License: BSD-3-clause
+### 2\. Create Isolated Build Directory
+
+```bash
+mkdir build && cd build
 ```
 
-## Installation
-
-### Compiling sources
-
-The only runtime dependency is qtbase ≥ 6.6.0.
-Build dependencies are as follows:
-- CMake ≥ 3.16.0 serves as the build system and therefore needs to be present to compile.
-- [lxqt-build-tools](https://github.com/lxqt/lxqt-build-tools/) ≥ 2.0.0 is also needed for compilation.
-- Git is needed to optionally pull latest VCS checkouts.
-
-Code configuration is handled by CMake. CMake variable `CMAKE_INSTALL_PREFIX` will normally have to be set to `/usr`, depending on the way library paths are dealt with on 64bit systems. Variables like `CMAKE_INSTALL_LIBDIR` may have to be set as well.
-
-To build, run `make`. To install, run `make install` which accepts variable `DESTDIR` as usual.
-
-To build PyQt bindings, build this library first, and then invoke `sip-wheel` in pyqt/ directory. Environment variables `CXXFLAGS` and `LDFLAGS` can be used to specify non-installed or non-standard directories for headers and shared libraries, and the built Python wheel can be installed by standard tools like `pip`. See [the CI script](.ci/build.sh) for a complete example.
-
-### Binary packages
-
-The library is provided by all major Linux distributions. This includes Arch Linux, Debian, Fedora, openSUSE and all of their children, given they use the same package repositories.
-Just use the distributions' package managers to search for string `qtermwidget`.
-
-
-### Translation
-
-Translations can be done in [LXQt-Weblate](https://translate.lxqt-project.org/projects/lxqt-desktop/qtermwidget/)
-
-<a href="https://translate.lxqt-project.org/projects/lxqt-desktop/qtermwidget/">
-<img src="https://translate.lxqt-project.org/widgets/lxqt-desktop/-/qtermwidget/multi-auto.svg" alt="Translation status" />
-</a>
-
-## API
-### Public Types
-Type | Variable
-| ---: | :---
-enum | ScrollBarPosition { NoScrollBar, ScrollBarLeft, ScrollBarRight }
-enum | KeyboardCursorShape { BlockCursor, UnderlineCursor, IBeamCursor }
-
-### Properties
-* flowControlEnabled : bool
-* getPtySlaveFd : const int
-* getShellPID : int
-* getForegroundProcessId : int
-* getTerminalFont : QFont
-* historyLinesCount : int
-* icon : const QString
-* keyBindings : QString
-* screenColumnsCount : int
-* selectedText(bool _preserveLineBreaks_ = true) : QString
-* sizeHint : const QSize
-* terminalSizeHint : bool
-* title : const QString
-* wordCharacters : QString
-* workingDirectory : QString
-
-### Public Functions
-Type | Function
-| ---: | :---
-| | QTermWidget(int _startnow_ = 1, QWidget *_parent_ = 0)
-virtual | ~QTermWidget()
-void | changeDir(const QString _&dir_)
-void | getSelectionEnd(int &_row_, int &_column_)
-void | getSelectionStart(int &_row_, int &_column_)
-void | scrollToEnd()
-void | sendText(QString &_text_)
-void | setArgs(QStringList &_args_)
-void | setAutoClose(bool _enabled_)
-void | setColorScheme(const QString &_name_)
-void | setCustomKeyBindingsDir(const QString& custom_dir)
-void | clearCustomKeyBindingsDir()
-void | setEnvironment(const QStringList &_environment_)
-void | setFlowControlEnabled(bool _enabled_)
-void | setFlowControlWarningEnabled(bool _enabled_)
-void | setHistorySize(int _lines_)
-void | setKeyboardCursorShape(QTermWidget::KeyboardCursorShape _shape_)
-void | setMonitorActivity(bool _enabled_)
-void | setMonitorSilence(bool _enabled_)
-void | setMotionAfterPasting(int _action_)
-void | setScrollBarPosition(QTermWidget::ScrollBarPosition _pos_)
-void | setSelectionEnd(int _row_, int _column_)
-void | setSelectionStart(int _row_, int _column_)
-void | setShellProgram(const QString &_program_)
-void | setSilenceTimeout(int _seconds_)
-void | setTerminalFont(QFont &_font_)
-void | setTerminalOpacity(qreal _level_)
-void | setTerminalSizeHint(bool _enabled_)
-void | setWorkingDirectory(const QString &_dir_)
-void | startShellProgram()
-void | startTerminalTeletype()
-QStringList | availableColorSchemes()
-
-### Public Slots
-Type | Function
-| ---: | :---
-void | copyClipboard()
-void | pasteClipboard()
-void | pasteSelection()
-void | zoomIn()
-void | zoomOut()
-void | setSize(_const QSize &_)
-void | setKeyBindings(const QString &_kb_)
-void | clear()
-void | toggleShowSearchBar()
-
-### Signals
-Type | Function
-| ---: | :---
-void | activity()
-void | bell(const QString &_message_)
-void | copyAvailable(bool)
-void | finished()
-void | profileChanged(const QString &_profile_)
-void | receivedData(const QString &_text_)
-void | sendData(const char*, int)
-void | silence()
-void | termGetFocus()
-void | termKeyPressed(QKeyEvent*)
-void | termLostFocus()
-void | titleChanged()
-void | urlActivated(const QUrl &, bool _fromContextMenu_)
-
-### Static Public Members
-Type | Function
-| ---: | :---
-static QStringList | availableColorSchemes()
-static QStringList | availableKeyBindings()
-static void | addCustomColorSchemeDir(const QString &*custom_dir*)
-
-### Protected Functions
-Type | Function
-| ---: | :---
-virtual void | resizeEvent(_QResizeEvent_*)
-
-### Protected Slots
-Type | Function
-| ---: | :---
-void | sessionFinished()
-void | selectionChanged(bool _textSelected_)
-
-### Member Type Documentation
-**enum QTermWidget::ScrollBarPosition**\
-This enum describes the location where the scroll bar is positioned in the display widget when calling QTermWidget::setScrollBarPosition().
-
-Constant | Value | Description
-| --- | :---: | --- |
-QTermWidget::NoScrollBar | 0x0 | Do not show the scroll bar.
-QTermWidget::ScrollBarLeft | 0x1 | Show the scroll bar on the left side of the display.
-QTermWidget::ScrollBarRight | 0x2 | Show the scroll bar on the right side of the display.
+### 3\. CMake Configuration \(Windows MSVC Only\)
 
-\
-**enum QTermWidget::KeyboardCursorShape**\
-This enum describes the available shapes for the keyboard cursor when calling QTermWidget::setKeyboardCursorShape().
+```bash
+cmake .. -G "Visual Studio 16 2019" -A x64 ^
+    -DCMAKE_PREFIX_PATH="Path/to/Qt5.12.11/lib/cmake" ^
+    -DBUILD_TEST_TERMINAL=ON
+```
 
-Constant | Value | Description
-| --- | :---: | --- |
-QTermWidget::BlockCursor | 0x0 | A rectangular block which covers the entire area of the cursor character.
-QTermWidget::UnderlineCursor | 0x1 | A single flat line which occupies the space at the bottom of the cursor character's area.
-QTermWidget::IBeamCursor | 0x2 | A cursor shaped like the capital letter 'I', similar to the IBeam cursor used in Qt/KDE text editors.
+#### Optional Compilation Flags
 
-### Property Documentation
-**flowControlEnabled : bool**\
-Returns whether flow control is enabled.
+```cmake
+-DBUILD_EXAMPLE=ON        # Build official demo programs
+-DUSE_UTF8PROC=ON         # Enable utf8proc for Unicode character width optimization
+-DUPDATE_TRANSLATIONS=ON  # Regenerate & update TS translation files
+```
 
-**getPtySlaveFd : const int**\
-Returns a pty slave file descriptor. This can be used for display and control a remote terminal.
+### 4\. Compile Binaries
 
-<!--**getShellPID : int**\-->
-**getForegroundProcessId : int**\
-Returns the PID of the foreground process. This is initially the same as processId() but can change
-as the user starts other programs inside the terminal. If there is a problem reading the foreground
-process id, 0 will be returned.
+```bash
+cmake --build . --config RelWithDebInfo
+```
 
-<!--**getTerminalFont : QFont**\-->
+### 5\. System Installation
 
-**historyLinesCount : int**\
-Returns the number of lines in the history buffer.
+```bash
+cmake --install .
+# Uninstall command
+cmake --build . --target uninstall
+```
 
-<!--**icon : const QString**\-->
+## Low\-Level Windows Implementation Details
 
-**keyBindings : QString**\
-Returns current key bindings.
+The upstream open\-source QTermWidget is designed exclusively for Unix\-like systems\. This project fully rewrites the underlying backend and retains only a Windows ConPTY adaptation layer:
 
-<!--**screenColumnsCount : int**\-->
+1. Pure Windows implementation of `KPtyDevice`
 
-**selectedText(bool _preserveLineBreaks_ = true) : QString**\
-Returns the currently selected text.
+    - `initConPTY()` creates a pseudo\-terminal paired with bidirectional anonymous read/write pipes\.
 
-<!--**sizeHint : const QSize**\-->
-<!--**terminalSizeHint : bool**\-->
-<!--**title : const QString**\-->
-<!--**workingDirectory : QString**\-->
+    - Asynchronous terminal output reading using overlapped I/O in background QtConcurrent threads\.
 
-**wordCharacters : QString**\
-When selecting text by word, consider these characters to be word characters in addition to
-alphanumeric characters, default is `:@-./_~`.
+    - Thread\-safe process start/stop logic; all kernel handles are automatically released to eliminate handle/memory leaks\.
 
-### Member Function Documentation
-<!--__void activity()__\-->
-<!--__void bell(const QString &_message_)__\-->
+2. Unified upper\-layer wrappers: `KPtyProcess` / `Pty`\. Business logic code requires no modification to handle underlying pipe mechanics\.
 
-__void changeDir(const QString _&dir_)__\
-Attempt to change shell directory (Linux only).
+3. Default supported shells: `cmd.exe` and `powershell.exe`\.
 
-__void clear()__\
-Clear the terminal content and move to home position.
+4. Dynamic terminal resizing via the `ResizePseudoConsole` API\.
 
-<!--__void copyAvailable(bool)__\-->
+5. Pipes enable `ENABLE_VIRTUAL_TERMINAL_PROCESSING` to fully parse VT color and cursor control escape sequences\.
 
-__void copyClipboard()__\
-Copy selection to clipboard.
+## Project Directory Structure
 
-<!--__void finished()__\-->
-<!--__void getSelectionEnd(int &_row_, int &_column_)__\-->
-<!--__void getSelectionStart(int &_row_, int &_column_)__\-->
+```Plain
+qtermwidget/
+├── CMakeLists.txt          
+├── README.md               
+├── cmake/                  
+├── lib/                    
+│   ├── kptydevice.h/cpp    
+│   ├── kptyprocess.h/cpp
+│   ├── Pty.h/cpp           
+│   ├── qtermwidget.h/cpp   
+│   ├── Vt102Emulation.cpp  
+│   ├── SearchBar.ui/h/cpp  
+│   ├── color-schemes/      
+│   └── kb-layouts/         
+├── test/
+│   └── main.cpp            
+├── examples/cpp/           
+└── translations/
+```
 
-__void pasteClipboard()__\
-Paste clipboard to terminal.
+## Build Output Artifacts
 
-__void pasteSelection()__\
-Paste selection to terminal.
+1. Core library: Windows shared library `qtermwidget5.dll`
 
-<!--__void profileChanged(const QString &_profile_)__\-->
+2. Executable binary: `test_terminal` \(standalone terminal test utility\)
 
-__void receivedData(const QString &_text_)__\
-Signals that we received new data from the process running in the terminal emulator.
+3. CMake export config: `qtermwidget5-config.cmake` for direct linking in external projects
 
-__void scrollToEnd()__\
-Wrapped, scroll to end of text.
+4. Resource assets: Color schemes, keyboard layouts and translation files installed automatically to system data directories
 
-__void sendData(const char*, int)__\
-Emitted when emulator send data to the terminal process (redirected for external recipient). It can be used for control and display the remote terminal.
+## License
 
-__void sendText(QString &_text_)__\
-Send text to terminal.
+Inherits the open\-source license of original QTermWidget: **LGPL\-2\.1 / GPL\-2\.0**\. Permits private secondary development and commercial use\.
 
-__void setArgs(QStringList &_args_)__\
-Sets the shell program arguments, default is none.
+## Compatibility Notes
 
-__void setAutoClose(bool _enabled_)__\
-Automatically close the terminal session after the shell process exits or keep it running.
+- Operating System: Windows only \(Windows 10 1903, Windows 11 and newer\)\. **Linux / macOS are unsupported**\.
 
-__void setColorScheme(const QString &_name_)__\
-Sets the color scheme, default is white on black.
+- Qt Framework: Qt5 only \(5\.12 \~ 5\.15\)\. The current branch is incompatible with Qt6\.
 
-__void setEnvironment(const QStringList &_environment_)__\
-Sets environment variables.
-
-__void setFlowControlEnabled(bool _enabled_)__\
-Sets whether flow control is enabled.
-
-__void setFlowControlWarningEnabled(bool _enabled_)__\
-Sets whether the flow control warning box should be shown when the flow control stop key (Ctrl+S) is pressed.
-
-__void setHistorySize(int _lines_)__\
-History size for scrolling.
-
-__void setKeyBindings(const QString &_kb_)__\
-Set named key binding for given widget.
-
-__void setKeyboardCursorShape(QTermWidget::KeyboardCursorShape _shape_)__\
-Sets the shape of the keyboard cursor.  This is the cursor drawn at the position in the terminal where keyboard input will appear.
-
-<!--__void setMonitorActivity(bool _enabled_)__\-->
-<!--__void setMonitorSilence(bool _enabled_)__\-->
-<!--__void setMotionAfterPasting(int _action_)__\-->
-
-__void setScrollBarPosition(QTermWidget::ScrollBarPosition _pos_)__\
-Sets presence and position of scrollbar.
-
-<!--__void setSelectionEnd(int _row_, int _column_)__\-->
-<!--__void setSelectionStart(int _row_, int _column_)__\-->
-
-__void setShellProgram(const QString &_program_)__\
-Sets the shell program, default is /bin/bash.
-
-<!--__void setSilenceTimeout(int _seconds_)__\-->
-<!--__void setSize(_const QSize &_)__\-->
-
-__void setTerminalFont(QFont &_font_)__\
-Sets terminal font. Default is application font with family Monospace, size 10. Beware of a performance penalty and display/alignment issues when using a proportional font.
-
-<!--__void setTerminalOpacity(qreal _level_)__\-->
-
-__void setTerminalSizeHint(bool _enabled_)__\
-Exposes TerminalDisplay::TerminalSizeHint.
-
-<!--__void setWorkingDirectory(const QString &_dir_)__\-->
-<!--__void silence()__\-->
-
-__void startShellProgram()__\
-Starts shell program if it was not started in constructor.
-
-__void startTerminalTeletype()__\
-Starts terminal teletype as is and redirect data for external recipient. It can be used for display and control a remote terminal.
-
-<!--__void termGetFocus()__\-->
-<!--__void termKeyPressed(QKeyEvent*)__\-->
-<!--__void termLostFocus()__\-->
-<!--__void titleChanged()__\-->
-<!--__void toggleShowSearchBar()__\-->
-<!--__void urlActivated(const QUrl &, bool _fromContextMenu_)__\-->
-
-__void zoomIn()__\
-Zooms in on the text.
-
-__void zoomOut()__\
-Zooms out in on the text.
+- CMake: Minimum required version 3\.18\.0\.

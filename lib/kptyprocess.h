@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is a part of QTerminal - http://gitorious.org/qterminal
  *
  * This file was un-linked from KDE and modified
@@ -141,6 +141,12 @@ public:
      */
     KPtyDevice *pty() const;
 
+    #if defined(Q_OS_WIN)
+public:
+    bool startConPtyProcess(const QString &program, const QStringList &args);
+private:
+    HANDLE hChildProcess = nullptr;
+#endif
 protected:
 
 private:

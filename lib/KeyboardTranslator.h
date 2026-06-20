@@ -535,7 +535,8 @@ private:
     bool saveTranslator(const KeyboardTranslator* translator);
 
     // Optional base directory to search for keyboard layouts, not used if empty
-    std::optional<QDir> _translatorBaseDir;
+    bool _hasTranslatorDir = false;
+    QDir _translatorBaseDir;
 
     QString findTranslatorPath(const QString& name);
 

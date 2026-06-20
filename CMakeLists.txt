@@ -32,21 +32,21 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # Minimum Versions
-set(QT_MINIMUM_VERSION "6.6.0")
-set(LXQTBT_MINIMUM_VERSION "2.4.0")
+set(QT_MINIMUM_VERSION "5.12.11")
+# set(LXQTBT_MINIMUM_VERSION "2.4.0")
 
-find_package(Qt6Widgets "${QT_MINIMUM_VERSION}" REQUIRED)
-find_package(Qt6LinguistTools "${QT_MINIMUM_VERSION}" REQUIRED)
-find_package(lxqt2-build-tools ${LXQTBT_MINIMUM_VERSION} REQUIRED)
+find_package(Qt5Widgets "${QT_MINIMUM_VERSION}" REQUIRED)
+find_package(Qt5LinguistTools "${QT_MINIMUM_VERSION}" REQUIRED)
+# find_package(lxqt2-build-tools ${LXQTBT_MINIMUM_VERSION} REQUIRED)
 
 if(USE_UTF8PROC)
     find_package(Utf8Proc REQUIRED)
 endif()
 
-include(LXQtPreventInSourceBuilds)
-include(LXQtTranslateTs)
-include(LXQtCompilerSettings NO_POLICY_SCOPE)
-include(LXQtCreatePkgConfigFile)
+# include(LXQtPreventInSourceBuilds)
+# include(LXQtTranslateTs)
+# include(LXQtCompilerSettings NO_POLICY_SCOPE)
+# include(LXQtCreatePkgConfigFile)
 
 if(APPLE)
     if(CMAKE_VERSION VERSION_GREATER 3.9)
@@ -55,7 +55,7 @@ if(APPLE)
     endif()
 endif()
 
-set(QTERMWIDGET_LIBRARY_NAME qtermwidget6)
+set(QTERMWIDGET_LIBRARY_NAME qtermwidget5)
 
 
 # main library
@@ -70,7 +70,6 @@ set(SRCS
     lib/KeyboardTranslator.cpp
     lib/konsole_wcwidth.cpp
     lib/kprocess.cpp
-    lib/kpty.cpp
     lib/kptydevice.cpp
     lib/kptyprocess.cpp
     lib/Pty.cpp
@@ -130,24 +129,24 @@ set(QTERMWIDGET_INCLUDE_DIR "${CMAKE_INSTALL_FULL_INCLUDEDIR}/${QTERMWIDGET_LIBR
 
 CHECK_FUNCTION_EXISTS(updwtmpx HAVE_UPDWTMPX)
 
-qt6_wrap_cpp(MOCS ${HDRS})
-qt6_wrap_ui(UI_SRCS ${UI})
-set(PKG_CONFIG_REQ "Qt6Widgets")
+qt5_wrap_cpp(MOCS ${HDRS})
+qt5_wrap_ui(UI_SRCS ${UI})
+set(PKG_CONFIG_REQ "Qt5Widgets")
 
-lxqt_translate_ts(QTERMWIDGET_QM
-    TRANSLATION_DIR "lib/translations"
-    UPDATE_TRANSLATIONS
-        ${UPDATE_TRANSLATIONS}
-    SOURCES
-        ${SRCS} ${HDRS} ${UI}
-    INSTALL_DIR
-        ${TRANSLATIONS_DIR}
-    COMPONENT
-        Runtime
-)
+# lxqt_translate_ts(QTERMWIDGET_QM
+#     TRANSLATION_DIR "lib/translations"
+#     UPDATE_TRANSLATIONS
+#         ${UPDATE_TRANSLATIONS}
+#     SOURCES
+#         ${SRCS} ${HDRS} ${UI}
+#     INSTALL_DIR
+#         ${TRANSLATIONS_DIR}
+#     COMPONENT
+#         Runtime
+# )
 
 add_library(${QTERMWIDGET_LIBRARY_NAME} SHARED ${SRCS} ${MOCS} ${UI_SRCS} ${QTERMWIDGET_QM})
-target_link_libraries(${QTERMWIDGET_LIBRARY_NAME} Qt6::Widgets)
+target_link_libraries(${QTERMWIDGET_LIBRARY_NAME} Qt5::Widgets)
 set_target_properties( ${QTERMWIDGET_LIBRARY_NAME} PROPERTIES
                        SOVERSION ${QTERMWIDGET_VERSION_MAJOR}
                        VERSION ${QTERMWIDGET_VERSION}
@@ -263,17 +262,17 @@ install(DIRECTORY
     FILES_MATCHING PATTERN "*.*schem*"
 )
 
-lxqt_create_pkgconfig_file(
-    PACKAGE_NAME ${QTERMWIDGET_LIBRARY_NAME}
-    DESCRIPTIVE_NAME ${QTERMWIDGET_LIBRARY_NAME}
-    DESCRIPTION "QTermWidget library for Qt ${QTERMWIDGET_VERSION_MAJOR}.x"
-    INCLUDEDIRS ${QTERMWIDGET_LIBRARY_NAME}
-    LIBS ${QTERMWIDGET_LIBRARY_NAME}
-    REQUIRES ${PKG_CONFIG_REQ}
-    VERSION ${QTERMWIDGET_VERSION}
-    INSTALL
-    COMPONENT Devel
-)
+# lxqt_create_pkgconfig_file(
+#     PACKAGE_NAME ${QTERMWIDGET_LIBRARY_NAME}
+#     DESCRIPTIVE_NAME ${QTERMWIDGET_LIBRARY_NAME}
+#     DESCRIPTION "QTermWidget library for Qt ${QTERMWIDGET_VERSION_MAJOR}.x"
+#     INCLUDEDIRS ${QTERMWIDGET_LIBRARY_NAME}
+#     LIBS ${QTERMWIDGET_LIBRARY_NAME}
+#     REQUIRES ${PKG_CONFIG_REQ}
+#     VERSION ${QTERMWIDGET_VERSION}
+#     INSTALL
+#     COMPONENT Devel
+# )
 
 configure_file(
     "${PROJECT_SOURCE_DIR}/cmake/${QTERMWIDGET_LIBRARY_NAME}-config.cmake.in"
@@ -331,3 +330,14 @@ CONFIGURE_FILE(
 ADD_CUSTOM_TARGET(uninstall
     "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
 )
+
+option(BUILD_TEST_TERMINAL "Build simple test terminal program" ON)
+if(BUILD_TEST_TERMINAL)
+    set(TEST_TERMINAL_SRC
+        test/main.cpp
+    )
+    add_executable(test_terminal ${TEST_TERMINAL_SRC})
+    target_link_libraries(test_terminal PRIVATE ${QTERMWIDGET_LIBRARY_NAME} Qt5::Widgets)
+    set_target_properties(test_terminal PROPERTIES WIN32_EXECUTABLE FALSE)
+    install(TARGETS test_terminal RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime)
+endif()

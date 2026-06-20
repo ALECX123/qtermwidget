@@ -1,4 +1,4 @@
-/*
+﻿/*
     This file is part of Konsole, an X terminal.
     Copyright (C) 2000 by Stephan Kulow <coolo@kde.org>
 
@@ -23,7 +23,26 @@
 #ifndef BLOCKARRAY_H
 #define BLOCKARRAY_H
 
-#include <unistd.h>
+#include <cstddef>
+#include <QtGlobal>
+
+// Windows 不支持 POSIX mmap，区分平台
+#if defined(Q_OS_UNIX) && !defined(Q_OS_WIN)
+#  define USE_POSIX_MMAP 1
+#  include <unistd.h>
+#  include <sys/mman.h>
+#  include <sys/types.h>
+#  include <sys/stat.h>
+#else
+#  define USE_POSIX_MMAP 0
+// Windows 页面大小固定4096
+#  define getpagesize() 4096
+// 占位宏，避免编译报错
+#  define PROT_READ 0
+#  define MAP_PRIVATE 0
+#endif
+
+//#include <unistd.h>
 
 //#error Do not use in KDE 2.1
 
