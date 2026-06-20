@@ -28,12 +28,18 @@ int main(int argc, char* argv[])
         QStringLiteral("Find..."),
         term,                  // 2.接收者对象
         &QTermWidget::toggleShowSearchBar, // 3.槽函数
-        QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_F) // 4.快捷键
-    );
-    actionsMenu->addAction(QStringLiteral("Copy"),
-        term, &QTermWidget::copyClipboard, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C));
-    actionsMenu->addAction(QStringLiteral("Paste"),
-        term, &QTermWidget::pasteClipboard), QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_V);
+        QKeySequence(Qt::CTRL | Qt::Key_F)); // 4.快捷键
+    actionsMenu->addAction(
+        QStringLiteral("Copy"),
+        term,
+        &QTermWidget::copyClipboard,
+        QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C));
+    actionsMenu->addAction(
+        QStringLiteral("Paste"),
+        term,
+        &QTermWidget::pasteClipboard,
+        QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_V));
+
     actionsMenu->addAction(QStringLiteral("About Qt"), &a, &QApplication::aboutQt);
     w.setMenuBar(menuBar);
 
@@ -43,7 +49,7 @@ int main(int argc, char* argv[])
 #elif defined(Q_WS_QWS)
     font.setFamily(QStringLiteral("fixed"));
 #else
-    font.setFamily(QStringLiteral("Monospace"));
+    font.setFamily(QStringLiteral("Cascadia Mono"));
 #endif
     font.setPointSize(12);
 
@@ -54,10 +60,13 @@ int main(int argc, char* argv[])
     term->setBlinkingCursor(true);
     term->setKeyboardCursorShape(Konsole::Emulation::KeyboardCursorShape::IBeamCursor);
     term->setScrollBarPosition(QTermWidget::ScrollBarRight);
+    
     // 启动默认 shell
 #ifdef Q_OS_WIN
     term->setShellProgram("cmd.exe");
     term->startShellProgram();
+    term->sendText("echo test\r\n");
+    term->scrollToEnd();
 #else
     term->startTerminalProgram("/bin/bash", {});
 #endif

@@ -1,4 +1,4 @@
-#include <QtDebug>
+ï»¿#include <QtDebug>
 #include <cstdio>
 #include <cstring>
 #include <vector>
@@ -149,7 +149,7 @@ const Block * BlockArray::at(size_t i)
         return nullptr;
     }
 #else
-    // Windows ÎŞmmap£¬¶ÑÄÚ´æ¶ÁÈ¡´úÌæ
+    // Windows æ— mmapï¼Œå †å†…å­˜è¯»å–ä»£æ›¿
     Block* block = new Block();
     lseek(ion, long(j * blocksize), SEEK_SET);
     _read(ion, block, blocksize);
@@ -169,7 +169,7 @@ void BlockArray::unmap()
             perror("munmap");
         }
 #else
-        // Windows ¶ÑÄÚ´æÊÍ·Å
+        // Windows å †å†…å­˜é‡Šæ”¾
         delete lastmap;
 #endif
     }

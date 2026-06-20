@@ -2074,6 +2074,7 @@ void TerminalDisplay::scrollToEnd()
 
   _screenWindow->scrollTo( _scrollBar->value() + 1 );
   _screenWindow->setTrackOutput( _screenWindow->atEndOfOutput() );
+  updateImage();
 }
 
 void TerminalDisplay::setScrollBarPosition(QTermWidget::ScrollBarPosition position)
